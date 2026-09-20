@@ -204,7 +204,7 @@ function vistaHoje() {
     </div>
     ${ultimo ? `<div class="section" style="gap:6px;padding-bottom:16px;border-bottom:1px solid var(--rule)">
       <span class="label">Sábado passado</span>
-      <div style="font:400 15px/1.5 Archivo,sans-serif">${esc(amigo(ultimo.quem).nome)} pagou ${euros(ultimo.valor)}, a ${dData(ultimo.data).getDate()} de ${MESES[dData(ultimo.data).getMonth()]}.</div>
+      <div style="font:400 15px/1.5 Archivo,sans-serif">${esc(amigo(ultimo.quem).nome)} pagou${ultimo.valor == null ? '' : ' ' + euros(ultimo.valor)}, a ${dData(ultimo.data).getDate()} de ${MESES[dData(ultimo.data).getMonth()]}.</div>
     </div>` : ''}
     ${st.dono ? `<div class="actions">
       <button class="btn" data-act="abrir-pago">Já está pago</button>
@@ -235,7 +235,7 @@ function vistaHist() {
           <div class="chip" style="background:${a.cor}">${a.letra}</div>
           <div class="name">${esc(a.nome)}</div>
           <div style="text-align:right;display:flex;flex-direction:column;gap:3px">
-            <span class="mono" style="font-size:14px">${euros(r.valor)}</span>
+            <span class="mono" style="font-size:14px">${r.valor == null ? '—' : euros(r.valor)}</span>
             <span class="mono" style="font-size:11px;color:var(--muted)">${dia(d)}</span>
           </div>
         </div>`;
