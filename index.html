@@ -84,7 +84,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const SUPABASE_URL = 'https://adhrmghxntqbiaefqiwk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_V_1nt5hm_Oae9i0KTtn7Iw_Jlu69EcQ';
-const DONO = 'vitorleone@gmail.com';
+const DONO = 'vitorleorne@gmail.com';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -410,14 +410,14 @@ document.addEventListener('input', e => { if (e.target.id === 'valor') st.valor 
 
 sb.auth.onAuthStateChange((_, sessao) => {
   st.sessao = sessao;
-  st.dono = !!(sessao && sessao.user && sessao.user.email === DONO);
+  st.dono = !!(sessao && sessao.user);
   pintar();
 });
 
 (async () => {
   const { data } = await sb.auth.getSession();
   st.sessao = data.session;
-  st.dono = !!(data.session && data.session.user.email === DONO);
+  st.dono = !!data.session;
   const cache = localStorage.getItem('qap.cache');
   if (cache) { try { st.registos = JSON.parse(cache); pintar(); } catch (err) {} }
   await carregar();
