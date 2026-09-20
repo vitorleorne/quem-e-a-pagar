@@ -95,17 +95,15 @@ const AMIGOS = [
   { id: 'rui',   nome: 'Rui',   letra: 'R', cor: '#4f6b4a' },
   { id: 'nuno',  nome: 'Nuno',  letra: 'N', cor: '#3f5670' },
 ];
-const LOCAIS = ['Café Progresso', 'Padaria Alba', 'Tasca do Zé'];
 
 const st = {
   tab: 'hoje', sessao: null, dono: false, registos: null, erro: null,
-  folha: null, valor: '', local: LOCAIS[0], toast: '', trocaId: null,
+  folha: null, toast: '', trocaId: null,
 };
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 const amigo = id => AMIGOS.find(a => a.id === id) || { nome: id, letra: (id||'?')[0].toUpperCase(), cor: '#6b5b45' };
-const euros = n => (Number(n) || 0).toFixed(2).replace('.', ',') + ' €';
 const dia = d => d.getDate() + ' ' + MESES_C[d.getMonth()];
 const dData = s => { const p = String(s).split('-'); return new Date(+p[0], +p[1]-1, +p[2]); };
 const iso = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -163,12 +161,11 @@ async function carregar() {
 
 async function registar() {
   const sab = proximoSabado();
-  const val = parseFloat((st.valor || '0').replace(',', '.')) || 0;
   const quem = fila()[0].id;
-  const { error } = await sb.from('pagamentos').insert({ data: iso(sab), quem, valor: val });
+  const { error } = await sb.from('pagamentos').insert({ data: iso(sab), quem });
   if (error) { aviso('Não deu para gravar: ' + error.message); return; }
-  st.folha = null; st.valor = ''; st.trocaId = null;
-  aviso(amigo(quem).nome + ' pagou ' + euros(val) + '. A vez segue.');
+  st.folha = null; st.trocaId = null;
+  aviso(amigo(quem).nome + ' pagou. A vez segue.');
   await carregar();
 }
 
@@ -192,7 +189,7 @@ function vistaHoje() {
 
   return `
     ${bannerInstalacao()}
-    <div class="topbar"><span class="label">À vez</span><span class="label">nº ${(st.registos || []).length + 1}</span></div>
+    <div class="topbar"><span class="label">Quem é a pagar?</span><span class="label">nº ${(st.registos || []).length + 1}</span></div>
     <div class="hero">
       <div class="mono" style="font-size:13px;color:var(--muted)">sábado, ${sab.getDate()} de ${MESES[sab.getMonth()]}</div>
       <h1>Paga<br>o ${esc(proximo.nome)}</h1>
@@ -204,7 +201,7 @@ function vistaHoje() {
     </div>
     ${ultimo ? `<div class="section" style="gap:6px;padding-bottom:16px;border-bottom:1px solid var(--rule)">
       <span class="label">Sábado passado</span>
-      <div style="font:400 15px/1.5 Archivo,sans-serif">${esc(amigo(ultimo.quem).nome)} pagou${ultimo.valor == null ? '' : ' ' + euros(ultimo.valor)}, a ${dData(ultimo.data).getDate()} de ${MESES[dData(ultimo.data).getMonth()]}.</div>
+      <div style="font:400 15px/1.5 Archivo,sans-serif">Pagou o ${esc(amigo(ultimo.quem).nome)}, a ${dData(ultimo.data).getDate()} de ${MESES[dData(ultimo.data).getMonth()]}.</div>
     </div>` : ''}
     ${st.dono ? `<div class="actions">
       <button class="btn" data-act="abrir-pago">Já está pago</button>
@@ -220,24 +217,18 @@ function vistaHist() {
   regs.forEach(r => {
     const d = dData(r.data), k = d.getFullYear() + '-' + d.getMonth();
     let g = grupos.find(x => x.k === k);
-    if (!g) { g = { k, rotulo: MESES[d.getMonth()] + ' ' + d.getFullYear(), soma: 0, itens: [] }; grupos.push(g); }
-    g.soma += Number(r.valor) || 0;
+    if (!g) { g = { k, rotulo: MESES[d.getMonth()] + ' ' + d.getFullYear(), itens: [] }; grupos.push(g); }
     g.itens.push(r);
   });
   return `<h1 class="serif" style="font-size:44px;margin:0 0 20px">Histórico</h1>` + grupos.map(g => `
     <div class="section">
-      <div class="label" style="display:flex;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:8px">
-        <span>${g.rotulo}</span><span>${euros(g.soma)}</span>
-      </div>
+      <div class="label" style="border-bottom:1px solid var(--rule);padding-bottom:8px">${g.rotulo}</div>
       <div>${g.itens.map(r => {
         const a = amigo(r.quem), d = dData(r.data);
         return `<div class="row">
           <div class="chip" style="background:${a.cor}">${a.letra}</div>
           <div class="name">${esc(a.nome)}</div>
-          <div style="text-align:right;display:flex;flex-direction:column;gap:3px">
-            <span class="mono" style="font-size:14px">${r.valor == null ? '—' : euros(r.valor)}</span>
-            <span class="mono" style="font-size:11px;color:var(--muted)">${dia(d)}</span>
-          </div>
+          <span class="mono" style="font-size:12px;color:var(--muted)">${dia(d)}</span>
         </div>`;
       }).join('')}</div>
     </div>`).join('');
@@ -245,32 +236,25 @@ function vistaHist() {
 
 function vistaNos() {
   const regs = st.registos || [];
-  const total = {}, conta = {};
-  AMIGOS.forEach(a => { total[a.id] = 0; conta[a.id] = 0; });
-  regs.forEach(r => { if (total[r.quem] === undefined) return; total[r.quem] += Number(r.valor) || 0; conta[r.quem]++; });
-  const media = AMIGOS.reduce((s, a) => s + total[a.id], 0) / AMIGOS.length;
+  const conta = {};
+  AMIGOS.forEach(a => { conta[a.id] = 0; });
+  regs.forEach(r => { if (conta[r.quem] === undefined) return; conta[r.quem]++; });
   const maxC = Math.max(1, ...AMIGOS.map(a => conta[a.id]));
-  const top = AMIGOS.slice().sort((x, y) => total[y.id] - total[x.id])[0];
+  const top = AMIGOS.slice().sort((x, y) => conta[y.id] - conta[x.id])[0];
 
   return `<h1 class="serif" style="font-size:44px;margin:0 0 20px">Nós três</h1>` +
-    AMIGOS.map(a => {
-      const dif = total[a.id] - media;
-      return `<div class="stat" style="margin-bottom:20px">
+    AMIGOS.map(a => `<div class="stat" style="margin-bottom:20px">
         <div style="display:flex;align-items:center;gap:12px">
           <div class="chip" style="background:${a.cor}">${a.letra}</div>
           <div class="serif" style="flex:1;font-size:22px">${esc(a.nome)}</div>
-          <div class="mono" style="font-size:12px;color:${dif >= 0 ? '#4f6b4a' : 'var(--muted)'}">${dif >= 0 ? '+' : '−'}${euros(Math.abs(dif))}</div>
+          <div class="mono" style="font-size:12px;color:var(--muted)">${esc(quando(a.id))}</div>
         </div>
         <div class="bars">${Array.from({ length: maxC }, (_, i) => `<div style="${i < conta[a.id] ? 'background:' + a.cor : ''}"></div>`).join('')}</div>
-        <div style="display:flex;gap:26px">
-          <div style="display:flex;align-items:baseline;gap:6px"><span class="mono" style="font-size:20px">${conta[a.id]}</span><span class="label">vezes</span></div>
-          <div style="display:flex;align-items:baseline;gap:6px"><span class="mono" style="font-size:20px">${euros(total[a.id])}</span><span class="label">gasto</span></div>
-        </div>
-      </div>`;
-    }).join('') +
+        <div style="display:flex;align-items:baseline;gap:6px"><span class="mono" style="font-size:20px">${conta[a.id]}</span><span class="label">vezes que pagou</span></div>
+      </div>`).join('') +
     (regs.length ? `<div class="note">
       <span class="label" style="color:#d8b49a">Curiosidade</span>
-      <div class="quip">${esc(top.nome)} já deixou ${euros(total[top.id])} na mesa em ${conta[top.id]} sábados.</div>
+      <div class="quip">${esc(top.nome)} é quem já pagou mais vezes: ${conta[top.id]} sábados.</div>
     </div>` : '');
 }
 
@@ -298,13 +282,7 @@ function folhaPagamento() {
       <h2>O ${esc(proximo.nome)} pagou</h2>
       <div class="mono" style="font-size:12px;color:var(--muted);margin-top:5px">sábado, ${sab.getDate()} de ${MESES[sab.getMonth()]}</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <span class="label">Valor da conta</span>
-      <div class="field">
-        <input id="valor" inputmode="decimal" placeholder="0,00" value="${esc(st.valor)}">
-        <span class="mono" style="font-size:20px;color:var(--muted)">€</span>
-      </div>
-    </div>
+    <p style="margin:0;font:400 13px/1.5 Archivo,sans-serif;color:var(--muted)">Fica registado e a vez passa ao seguinte.</p>
     <button class="btn" data-act="gravar">Registar e passar a vez</button>
   </div>`;
 }
@@ -368,9 +346,6 @@ document.addEventListener('click', async e => {
   const tab = e.target.closest('nav button');
   if (tab) { st.tab = tab.dataset.tab; pintar(); return; }
 
-  const local = e.target.closest('[data-local]');
-  if (local) { st.local = local.dataset.local; pintar(); return; }
-
   const troca = e.target.closest('[data-troca]');
   if (troca) {
     const anterior = fila()[0].nome;
@@ -383,12 +358,12 @@ document.addEventListener('click', async e => {
   if (!act) return;
   const a = act.dataset.act;
   if (a === 'fechar') { st.folha = null; pintar(); }
-  if (a === 'abrir-pago') { st.folha = 'pago'; pintar(); setTimeout(() => $('#valor') && $('#valor').focus(), 60); }
+  if (a === 'abrir-pago') { st.folha = 'pago'; pintar(); }
   if (a === 'abrir-troca') { st.folha = 'troca'; pintar(); }
   if (a === 'login') { st.folha = 'login'; pintar(); }
   if (a === 'sair') { await sb.auth.signOut(); aviso('Sessão terminada.'); }
   if (a === 'fechar-instalar') { localStorage.setItem('qap.instalado', '1'); pintar(); }
-  if (a === 'gravar') { st.valor = ($('#valor') || {}).value || ''; await registar(); }
+  if (a === 'gravar') { await registar(); }
   if (a === 'entrar') {
     const email = ($('#email') || {}).value || DONO;
     const password = ($('#password') || {}).value || '';
@@ -398,8 +373,6 @@ document.addEventListener('click', async e => {
     aviso('Bem-vindo. Já podes registar pagamentos.');
   }
 });
-
-document.addEventListener('input', e => { if (e.target.id === 'valor') st.valor = e.target.value; });
 
 sb.auth.onAuthStateChange((_, sessao) => {
   st.sessao = sessao;
