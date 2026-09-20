@@ -165,7 +165,7 @@ async function registar() {
   const sab = proximoSabado();
   const val = parseFloat((st.valor || '0').replace(',', '.')) || 0;
   const quem = fila()[0].id;
-  const { error } = await sb.from('pagamentos').insert({ data: iso(sab), quem, local: st.local, valor: val });
+  const { error } = await sb.from('pagamentos').insert({ data: iso(sab), quem, valor: val });
   if (error) { aviso('Não deu para gravar: ' + error.message); return; }
   st.folha = null; st.valor = ''; st.trocaId = null;
   aviso(amigo(quem).nome + ' pagou ' + euros(val) + '. A vez segue.');
@@ -204,7 +204,7 @@ function vistaHoje() {
     </div>
     ${ultimo ? `<div class="section" style="gap:6px;padding-bottom:16px;border-bottom:1px solid var(--rule)">
       <span class="label">Sábado passado</span>
-      <div style="font:400 15px/1.5 Archivo,sans-serif">${esc(amigo(ultimo.quem).nome)} pagou ${euros(ultimo.valor)}${ultimo.local ? ' no ' + esc(ultimo.local) : ''}, a ${dData(ultimo.data).getDate()} de ${MESES[dData(ultimo.data).getMonth()]}.</div>
+      <div style="font:400 15px/1.5 Archivo,sans-serif">${esc(amigo(ultimo.quem).nome)} pagou ${euros(ultimo.valor)}, a ${dData(ultimo.data).getDate()} de ${MESES[dData(ultimo.data).getMonth()]}.</div>
     </div>` : ''}
     ${st.dono ? `<div class="actions">
       <button class="btn" data-act="abrir-pago">Já está pago</button>
@@ -233,10 +233,7 @@ function vistaHist() {
         const a = amigo(r.quem), d = dData(r.data);
         return `<div class="row">
           <div class="chip" style="background:${a.cor}">${a.letra}</div>
-          <div class="name" style="display:flex;flex-direction:column;gap:3px">
-            <span>${esc(a.nome)}</span>
-            <span style="font-size:12px;color:var(--muted)">${esc(r.local || '—')}</span>
-          </div>
+          <div class="name">${esc(a.nome)}</div>
           <div style="text-align:right;display:flex;flex-direction:column;gap:3px">
             <span class="mono" style="font-size:14px">${euros(r.valor)}</span>
             <span class="mono" style="font-size:11px;color:var(--muted)">${dia(d)}</span>
@@ -307,10 +304,6 @@ function folhaPagamento() {
         <input id="valor" inputmode="decimal" placeholder="0,00" value="${esc(st.valor)}">
         <span class="mono" style="font-size:20px;color:var(--muted)">€</span>
       </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <span class="label">Onde</span>
-      <div class="pills">${LOCAIS.map(l => `<button class="pill" data-local="${esc(l)}" data-on="${st.local === l ? 1 : 0}">${esc(l)}</button>`).join('')}</div>
     </div>
     <button class="btn" data-act="gravar">Registar e passar a vez</button>
   </div>`;
