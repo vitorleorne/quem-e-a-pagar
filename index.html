@@ -216,7 +216,9 @@ function vistaHoje() {
       <div style="font:400 15px/1.5 Archivo,sans-serif">Pagou o ${esc(amigo(ultimo.quem).nome)}, a ${dData(ultimo.data).getDate()} de ${MESES[dData(ultimo.data).getMonth()]}.</div>
     </div>` : ''}
     ${st.dono ? `<div class="actions">
-      <button class="btn" data-act="abrir-pago">Já está pago</button>
+      ${new Date().getDay() === 6
+        ? '<button class="btn" data-act="abrir-pago">Já está pago</button>'
+        : '<p style="margin:0;padding:15px 0;text-align:center;font:italic 400 16px/1.4 \'Instrument Serif\',Georgia,serif;color:var(--muted)">O registo abre no sábado.</p>'}
       <button class="btn btn-ghost" data-act="abrir-troca">Trocar a vez</button>
     </div>` : `<div class="actions"><button class="btn btn-ghost" data-act="login">Entrar como dono</button></div>`}
   `;
@@ -301,11 +303,14 @@ function folhaPagamento() {
   return `<div class="scrim" data-act="fechar"></div>
   <div class="sheet">
     <div>
-      <h2>O ${esc(proximo.nome)} pagou</h2>
+      <h2>Confirmas que pagou o ${esc(proximo.nome)}?</h2>
       <div class="mono" style="font-size:12px;color:var(--muted);margin-top:5px">sábado, ${sab.getDate()} de ${MESES[sab.getMonth()]}</div>
     </div>
-    <p style="margin:0;font:400 13px/1.5 Archivo,sans-serif;color:var(--muted)">Fica registado e a vez passa ao seguinte.</p>
-    <button class="btn" data-act="gravar">Registar e passar a vez</button>
+    <p style="margin:0;font:400 13px/1.5 Archivo,sans-serif;color:var(--muted)">Fica registado neste sábado e a vez passa ao seguinte. Dá para desfazer só pela base de dados.</p>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1" data-act="fechar">Ainda não</button>
+      <button class="btn" style="flex:1" data-act="gravar">Sim, pagou</button>
+    </div>
   </div>`;
 }
 
