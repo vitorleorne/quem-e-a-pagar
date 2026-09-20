@@ -341,10 +341,17 @@ function folhaLogin() {
   <div class="sheet">
     <div>
       <h2>Entrar</h2>
-      <p style="margin:6px 0 0;font:400 13px/1.5 Archivo,sans-serif;color:var(--muted)">Recebes um link por email. Depois disso a sessão fica guardada neste telemóvel.</p>
+      <p style="margin:6px 0 0;font:400 13px/1.5 Archivo,sans-serif;color:var(--muted)">Só o dono regista pagamentos. A sessão fica guardada neste telemóvel.</p>
     </div>
-    <div class="field"><input class="txt" id="email" type="email" inputmode="email" placeholder="o teu email" value="${DONO}"></div>
-    <button class="btn" data-act="enviar-link">Enviar link</button>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span class="label">Email</span>
+      <div class="field"><input class="txt" id="email" type="email" inputmode="email" autocomplete="username" placeholder="o teu email" value="${DONO}"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span class="label">Password</span>
+      <div class="field"><input class="txt" id="password" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+    </div>
+    <button class="btn" data-act="entrar">Entrar</button>
   </div>`;
 }
 
@@ -386,13 +393,16 @@ document.addEventListener('click', async e => {
   if (a === 'abrir-pago') { st.folha = 'pago'; pintar(); setTimeout(() => $('#valor') && $('#valor').focus(), 60); }
   if (a === 'abrir-troca') { st.folha = 'troca'; pintar(); }
   if (a === 'login') { st.folha = 'login'; pintar(); }
+  if (a === 'sair') { await sb.auth.signOut(); aviso('Sessão terminada.'); }
   if (a === 'fechar-instalar') { localStorage.setItem('qap.instalado', '1'); pintar(); }
   if (a === 'gravar') { st.valor = ($('#valor') || {}).value || ''; await registar(); }
-  if (a === 'enviar-link') {
+  if (a === 'entrar') {
     const email = ($('#email') || {}).value || DONO;
-    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+    const password = ($('#password') || {}).value || '';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { aviso('Não entrou: ' + error.message); return; }
     st.folha = null;
-    aviso(error ? 'Falhou: ' + error.message : 'Link enviado para ' + email + '. Abre-o neste telemóvel.');
+    aviso('Bem-vindo. Já podes registar pagamentos.');
   }
 });
 
