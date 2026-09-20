@@ -54,7 +54,7 @@ nav button[data-on="1"]{color:var(--ink);border-top-color:var(--terra)}
 .pills{display:flex;gap:8px;flex-wrap:wrap}
 .pill{border:1px solid var(--ink);border-radius:2px;padding:10px 14px;font:400 13px/1 Archivo,sans-serif;background:none;color:var(--ink)}
 .pill[data-on="1"]{background:var(--ink);color:var(--paper)}
-.toast{position:fixed;left:26px;right:26px;bottom:calc(env(safe-area-inset-bottom) + 86px);z-index:90;padding:15px 18px;background:var(--ink);color:var(--paper);font:400 14px/1.4 Archivo,sans-serif;animation:up .3s both;max-width:508px;margin:0 auto}
+.toast{position:fixed;left:26px;right:26px;top:calc(env(safe-area-inset-top) + 16px);z-index:95;padding:15px 18px;background:var(--ink);color:var(--paper);font:400 14px/1.4 Archivo,sans-serif;animation:up .3s both;max-width:508px;margin:0 auto;box-shadow:0 8px 24px -12px rgba(42,33,26,.6)}
 .bars{display:flex;gap:5px}
 .bars div{height:10px;flex:1;background:#ddd0ba}
 .stat{display:flex;flex-direction:column;gap:12px;padding-bottom:20px;border-bottom:1px solid var(--rule)}
