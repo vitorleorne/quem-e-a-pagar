@@ -90,6 +90,9 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: tr
 
 const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const MESES_C = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+// quem está fora, e a partir de que sábado volta (inclusive)
+const AUSENCIAS = { vitor: '2026-10-24' };
+
 const AMIGOS = [
   { id: 'vitor', nome: 'Vítor', letra: 'V', cor: '#b4401f' },
   { id: 'rui',   nome: 'Rui',   letra: 'R', cor: '#4f6b4a' },
@@ -120,9 +123,17 @@ function ultimoPor(id) {
   return r.length ? r[0].data : null;
 }
 
+function disponivel(id, sabado) {
+  const volta = AUSENCIAS[id];
+  return !volta || sabado >= dData(volta);
+}
+
 function fila() {
+  const sab = proximoSabado();
   const peso = a => { const d = ultimoPor(a.id); return d ? dData(d).getTime() : 0; };
-  const ord = AMIGOS.slice().sort((x, y) => peso(x) - peso(y));
+  let base = AMIGOS.filter(a => disponivel(a.id, sab));
+  if (!base.length) base = AMIGOS.slice();
+  const ord = base.sort((x, y) => peso(x) - peso(y));
   if (st.trocaId) {
     const i = ord.findIndex(a => a.id === st.trocaId);
     if (i > 0) ord.unshift(ord.splice(i, 1)[0]);
@@ -198,6 +209,7 @@ function vistaHoje() {
     <div class="section">
       <span class="label">Depois dele</span>
       <div>${seguintes}</div>
+      ${avisoAusencias()}
     </div>
     ${ultimo ? `<div class="section" style="gap:6px;padding-bottom:16px;border-bottom:1px solid var(--rule)">
       <span class="label">Sábado passado</span>
@@ -256,6 +268,16 @@ function vistaNos() {
       <span class="label" style="color:#d8b49a">Curiosidade</span>
       <div class="quip">${esc(top.nome)} é quem já pagou mais vezes: ${conta[top.id]} sábados.</div>
     </div>` : '');
+}
+
+function avisoAusencias() {
+  const sab = proximoSabado();
+  const fora = AMIGOS.filter(a => !disponivel(a.id, sab));
+  if (!fora.length) return '';
+  return fora.map(a => {
+    const v = dData(AUSENCIAS[a.id]);
+    return `<p style="margin:2px 0 0;font:italic 400 15px/1.4 'Instrument Serif',Georgia,serif;color:var(--muted)">${esc(a.nome)} está fora da fila até ${v.getDate()} de ${MESES[v.getMonth()]}.</p>`;
+  }).join('');
 }
 
 function bannerInstalacao() {
