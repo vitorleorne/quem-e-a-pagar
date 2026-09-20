@@ -190,31 +190,43 @@ function aviso(t) {
 
 function vistaHoje() {
   const ord = fila(), proximo = ord[0], sab = proximoSabado();
-  const ultimo = (st.registos || [])[0];
-  const seguintes = ord.slice(1).map(a => `
-    <div class="row">
-      <div class="chip" style="background:${a.cor}">${a.letra}</div>
-      <div class="name">${esc(a.nome)}</div>
-      <div class="mono" style="font-size:12px;color:var(--muted)">${esc(quando(a.id))}</div>
-    </div>`).join('');
+  const dd = String(sab.getDate()).padStart(2, '0');
+  const mm = String(sab.getMonth() + 1).padStart(2, '0');
+  const aa = String(sab.getFullYear()).slice(2);
+
+  // carimbos: última vez de cada um, do mais recente para o mais antigo
+  const carimbos = AMIGOS.map(a => ({ a: a, d: ultimoPor(a.id) }))
+    .filter(x => x.d)
+    .sort((x, y) => dData(y.d) - dData(x.d))
+    .map((x, i, arr) => `
+      <div style="flex:1;padding:14px 8px;text-align:center;${i < arr.length - 1 ? 'border-right:1px dashed var(--dash);' : ''}">
+        <div style="width:34px;height:34px;margin:0 auto 8px;border-radius:50%;background:${x.a.cor};color:#f3ece0;display:flex;align-items:center;justify-content:center;font:500 14px/1 'IBM Plex Mono',monospace">${x.a.letra}</div>
+        <div class="mono" style="font-size:10.5px;color:var(--muted);text-transform:uppercase">${dia(dData(x.d))}</div>
+      </div>`).join('');
+
+  const segue = ord[1];
+  const proxSab = new Date(sab); proxSab.setDate(proxSab.getDate() + 7);
+  const linhas = [];
+  if (segue) linhas.push('A seguir o ' + segue.nome + ', a ' + proxSab.getDate() + ' de ' + MESES[proxSab.getMonth()] + '.');
+  AMIGOS.filter(a => !disponivel(a.id, sab)).forEach(a => {
+    const v = dData(AUSENCIAS[a.id]);
+    linhas.push(a.nome + ' volta a ' + v.getDate() + ' de ' + MESES[v.getMonth()] + '.');
+  });
 
   return `
     ${bannerInstalacao()}
-    <div class="topbar"><span class="label">Quem é a pagar?</span><span class="label">nº ${(st.registos || []).length + 1}</span></div>
-    <div class="hero">
-      <div class="mono" style="font-size:13px;color:var(--muted)">sábado, ${sab.getDate()} de ${MESES[sab.getMonth()]}</div>
-      <h1>Paga<br>o ${esc(proximo.nome)}</h1>
-      <div class="quip">${esc(frase(proximo))}</div>
+    <div style="border:1.5px solid var(--ink);display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1.5px dashed var(--ink);font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase">
+        <span>Quem é a pagar?</span><span>${dd}.${mm}.${aa}</span>
+      </div>
+      <div style="padding:30px 18px 26px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;background:${proximo.cor};color:#fff">
+        <div class="mono" style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#fff">Paga</div>
+        <div class="serif" style="font-size:clamp(56px,20vw,78px);line-height:0.85">${esc(proximo.nome)}</div>
+        <div style="font:italic 400 17px/1.35 'Instrument Serif',Georgia,serif;color:#fff">${esc(frase(proximo))}</div>
+      </div>
+      ${carimbos ? `<div style="border-top:1.5px dashed var(--ink);display:flex">${carimbos}</div>` : ''}
     </div>
-    <div class="section">
-      <span class="label">Depois dele</span>
-      <div>${seguintes}</div>
-      ${avisoAusencias()}
-    </div>
-    ${ultimo ? `<div class="section" style="gap:6px;padding-bottom:16px;border-bottom:1px solid var(--rule)">
-      <span class="label">Sábado passado</span>
-      <div style="font:400 15px/1.5 Archivo,sans-serif">Pagou o ${esc(amigo(ultimo.quem).nome)}, a ${dData(ultimo.data).getDate()} de ${MESES[dData(ultimo.data).getMonth()]}.</div>
-    </div>` : ''}
+    ${linhas.length ? `<p style="margin:18px 0 0;font:400 14px/1.5 Archivo,sans-serif;color:var(--muted)">${esc(linhas.join(' '))}</p>` : ''}
     ${st.dono ? `<div class="actions">
       ${new Date().getDay() === 6
         ? '<button class="btn" data-act="abrir-pago">Já está pago</button>'
