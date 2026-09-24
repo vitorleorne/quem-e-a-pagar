@@ -219,10 +219,10 @@ function vistaHoje() {
       <div style="display:flex;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1.5px dashed var(--ink);font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase">
         <span>Quem é a pagar?</span><span data-act="login" style="cursor:pointer">${dd}.${mm}.${aa}</span>
       </div>
-      <div style="padding:30px 18px 26px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;background:${proximo.cor};color:#fff">
+      <div style="padding:30px 12px 26px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;background:${proximo.cor};color:#fff">
         <div class="mono" style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#fff">Paga</div>
         <div class="serif" style="font-size:clamp(56px,20vw,78px);line-height:0.85">${esc(proximo.nome)}</div>
-        <div style="font:italic 400 17px/1.35 'Instrument Serif',Georgia,serif;color:#fff">${esc(frase(proximo))}</div>
+        <div class="mono" style="font-size:min(3.1vw,14px);line-height:1.4;letter-spacing:.03em;text-transform:uppercase;text-wrap:balance;color:#fff">${esc(frase(proximo))}</div>
       </div>
       ${carimbos ? `<div style="border-top:1.5px dashed var(--ink);display:flex">${carimbos}</div>` : ''}
     </div>
