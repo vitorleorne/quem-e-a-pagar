@@ -91,7 +91,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: tr
 const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const MESES_C = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 // quem está fora, e a partir de que sábado volta (inclusive)
-const AUSENCIAS = { vitor: '2026-10-24' };
+const AUSENCIAS = { vitor: '2026-10-24', nuno: '2026-10-17' };
 
 const AMIGOS = [
   { id: 'vitor', nome: 'Vítor', letra: 'V', cor: '#5f6b32' },
@@ -111,10 +111,14 @@ const dia = d => d.getDate() + ' ' + MESES_C[d.getMonth()];
 const dData = s => { const p = String(s).split('-'); return new Date(+p[0], +p[1]-1, +p[2]); };
 const iso = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 
+function haMesa(d) { return AMIGOS.filter(a => disponivel(a.id, d)).length >= 2; }
+
+// próximo sábado com pelo menos dois presentes
 function proximoSabado() {
   const d = new Date(); d.setHours(0,0,0,0);
   const delta = (6 - d.getDay() + 7) % 7;
   d.setDate(d.getDate() + delta);
+  for (let i = 0; i < 60 && !haMesa(d); i++) d.setDate(d.getDate() + 7);
   return d;
 }
 
@@ -204,8 +208,10 @@ function vistaHoje() {
         <div class="mono" style="font-size:10.5px;color:var(--muted);text-transform:uppercase">${dia(dData(x.d))}</div>
       </div>`).join('');
 
-  const segue = ord[1];
   const proxSab = new Date(sab); proxSab.setDate(proxSab.getDate() + 7);
+  for (let i = 0; i < 60 && !haMesa(proxSab); i++) proxSab.setDate(proxSab.getDate() + 7);
+  const pesoU = a => { const d = ultimoPor(a.id); return d ? dData(d).getTime() : 0; };
+  const segue = AMIGOS.filter(a => a.id !== proximo.id && disponivel(a.id, proxSab)).sort((x, y) => pesoU(x) - pesoU(y))[0];
   const linhas = [];
   if (segue) linhas.push('A seguir o ' + segue.nome + ', a ' + proxSab.getDate() + ' de ' + MESES[proxSab.getMonth()] + '.');
   AMIGOS.filter(a => !disponivel(a.id, sab)).forEach(a => {
