@@ -222,7 +222,7 @@ function vistaHoje() {
       <div style="padding:30px 12px 26px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;background:${proximo.cor};color:#fff">
         <div class="mono" style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#fff">Paga</div>
         <div class="serif" style="font-size:clamp(56px,20vw,78px);line-height:0.85">${esc(proximo.nome)}</div>
-        <div class="mono" style="font-size:min(3.5vw,15px);line-height:1.4;text-wrap:balance;color:#fff">${esc(frase(proximo))}</div>
+        <div class="mono" style="font-size:min(calc((100vw - 90px) / ${(frase(proximo).length * 0.6 + 1).toFixed(1)}), 15px);line-height:1.4;white-space:nowrap;color:#fff">${esc(frase(proximo))}</div>
       </div>
       ${carimbos ? `<div style="border-top:1.5px dashed var(--ink);display:flex">${carimbos}</div>` : ''}
     </div>
